@@ -1,0 +1,20 @@
+$TTL 3600
+@   IN  SOA ns.contoh.test. admin.contoh.test. (
+        2025061201 ; serial
+        3600       ; refresh
+        1800       ; retry
+        604800     ; expire
+        86400 )    ; minimum
+    IN  NS ns.contoh.test.
+ns  IN  A   192.168.2.5
+@   IN  A   192.168.2.100
+www IN  CNAME @
+api IN  A   192.168.2.101
+mail IN  A   192.168.2.102
+     IN  MX 10 mail.contoh.test.
+txt1 IN  TXT "v=spf1 include:_spf.example.com ~all"
+txt2 IN  TXT "Some other TXT record"
+srv1 IN  SRV 0 5 5060 sip.contoh.test.
+srv2 IN  SRV 1 10 5061 sip2.contoh.test.
+aaaa IN  AAAA ::1
+alias IN  CNAME www

@@ -1,0 +1,18 @@
+$ORIGIN example.
+$TTL 3600
+
+@       IN SOA  ns1.example. admin.example. (
+                2025061301 ; serial
+                3600       ; refresh
+                1800       ; retry
+                1209600    ; expire
+                3600 )     ; minimum
+
+        IN NS   ns1.example.
+
+ns1     IN A    192.168.2.31
+www     IN A    192.168.2.32
+api     IN A    192.168.2.33
+app     IN A    192.168.2.34
+dev     IN A    192.168.2.35
+*.dev   IN A    192.168.2.35

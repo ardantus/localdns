@@ -1,0 +1,18 @@
+$ORIGIN localhost.
+$TTL 3600
+
+@       IN SOA  ns1.localhost. admin.localhost. (
+                2025061301 ; serial
+                3600       ; refresh
+                1800       ; retry
+                1209600    ; expire
+                3600 )     ; minimum
+
+        IN NS   ns1.localhost.
+
+ns1     IN A    192.168.2.21
+www     IN A    192.168.2.22
+api     IN A    192.168.2.23
+app     IN A    192.168.2.24
+dev     IN A    192.168.2.25
+*.dev   IN A    192.168.2.25

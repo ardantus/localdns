@@ -1,0 +1,11 @@
+$TTL 3600
+@   IN  SOA ns.domain.test. admin.domain.test. (
+        2025061201 ; serial
+        3600       ; refresh
+        1800       ; retry
+        604800     ; expire
+        86400 )    ; minimum
+    IN  NS ns.domain.test.
+10  IN  PTR domain.test.
+11  IN  PTR api.domain.test.
+20  IN  PTR mail.domain.test.

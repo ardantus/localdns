@@ -1,0 +1,98 @@
+.
+{
+    forward . 192.168.2.3
+	cache 30
+    log
+    errors
+}
+
+domain.test {
+    file /zones/domain.test.zone domain.test
+    reload 30s
+    log
+    errors
+}
+
+contoh.test {
+    file /zones/contoh.test.zone contoh.test
+    reload 30s
+    log
+    errors
+}
+
+localhost {
+    file /zones/zone.localhost localhost.
+    reload 30s
+    log
+    errors
+}
+
+example {
+    file /zones/zone.example example.
+    reload 30s
+    log
+    errors
+}
+
+invalid {
+    file /zones/zone.invalid invalid.
+    reload 30s
+    log
+    errors
+}
+
+168.192.in-addr.arpa {
+    file /zones/reverse.zone 168.192.in-addr.arpa
+    reload 30s
+    log
+    errors
+}
+
+2.168.192.in-addr.arpa {
+    file /zones/reverse.192.168.2.zone 2.168.192.in-addr.arpa
+    reload 30s
+    log
+    errors
+}
+
+3.168.192.in-addr.arpa {
+    file /zones/reverse.192.168.3.zone 3.168.192.in-addr.arpa
+    reload 30s
+    log
+    errors
+}
+
+4.168.192.in-addr.arpa {
+    file /zones/reverse.192.168.4.zone 4.168.192.in-addr.arpa
+    reload 30s
+    log
+    errors
+}
+
+100.168.192.in-addr.arpa {
+    file /zones/reverse.192.168.100.zone 100.168.192.in-addr.arpa
+    reload 30s
+    log
+    errors
+}
+
+111.168.192.in-addr.arpa {
+    file /zones/reverse.192.168.111.zone 111.168.192.in-addr.arpa
+    reload 30s
+    log
+    errors
+}
+
+112.168.192.in-addr.arpa {
+    file /zones/reverse.192.168.112.zone 112.168.192.in-addr.arpa
+    reload 30s
+    log
+    errors
+}
+
+0.0.10.in-addr.arpa {
+    file /zones/reverse.10.0.0.zone 0.0.10.in-addr.arpa
+    reload 30s
+    log
+    errors
+}
