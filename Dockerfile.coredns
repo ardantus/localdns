@@ -1,0 +1,25 @@
+FROM golang:1.22 AS builder
+
+WORKDIR /go/src/github.com/coredns/coredns
+
+# Clone CoreDNS
+RUN git clone https://github.com/coredns/coredns.git .
+
+# Add pdsql plugin to plugin.cfg
+# We insert it before 'etcd' to ensure it has high priority, or just append it.
+# Check https://github.com/wenerme/coredns-pdsql for instructions.
+# Usually: pdsql:github.com/wenerme/coredns-pdsql
+RUN echo "pdsql:github.com/wenerme/coredns-pdsql" >> plugin.cfg
+
+# Generate code
+RUN go generate
+
+# Build
+RUN go build -o coredns
+
+FROM debian:stable-slim
+
+COPY --from=builder /go/src/github.com/coredns/coredns/coredns /coredns
+
+EXPOSE 53 53/udp
+ENTRYPOINT ["/coredns"]

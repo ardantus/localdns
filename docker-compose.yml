@@ -1,12 +1,58 @@
 services:
   coredns:
-    image: coredns/coredns:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.coredns
     container_name: coredns
-    network_mode: host
     ports:
       - "53:53/udp"
       - "53:53/tcp"
+    environment:
+      - POSTGRES_DSN=postgres://user:password@postgres:5432/localdns?sslmode=disable
     volumes:
       - ./Corefile:/Corefile
-      - ./zones:/zones
     restart: always
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: localdns_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: localdns
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: always
+
+  backend:
+    image: golang:1.22-alpine
+    container_name: localdns_backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=localdns
+      - DB_PORT=5432
+    ports:
+      - "8080:8080"
+    command: sh -c "go mod tidy && go run main.go"
+    depends_on:
+      - postgres
+
+  frontend:
+    image: node:20-alpine
+    container_name: localdns_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000" # Vite default
+    command: sh -c "npm run dev -- --host"

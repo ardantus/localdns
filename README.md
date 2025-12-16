@@ -1,96 +1,105 @@
-# LocalDNS dengan CoreDNS dan Pi-hole (mode internal)
+# LocalDNS Registrar System
 
-Sistem ini adalah implementasi DNS lokal berbasis **CoreDNS**, di mana semua perangkat tetap menggunakan **Pi-hole** (192.168.2.3) sebagai DNS utama. Pi-hole melakukan **penerusan (forwarding)** domain lokal tertentu seperti `.test` ke **CoreDNS** (192.168.2.5), dan sisanya ke resolver publik melalui **dnscrypt-proxy**.
+This project is a **Full-Stack Local Domain Registrar**. It allows users to register domains (`.lan`, `.test`, etc.) and manage DNS records via a modern Web UI, with all changes reflected instantly in the local network DNS.
 
----
+[View Changelog](CHANGELOG.md)
 
-## 📡 Topologi Jaringan
+## 🏗 Architecture
 
-```plaintext
-+-------------+        +------------------+        +------------------+        +-------------------+
-|    Klien    |  DNS→  |     Pi-hole      |  →DNS  |     CoreDNS      |  →DNS  |   dnscrypt-proxy  |
-| 192.168.X.X |        | 192.168.2.3:53   |        | 192.168.2.5:53   |        |   127.0.0.1:54    |
-+-------------+        +------------------+        +------------------+        +-------------------+
-                             │                          ▲
-                             └──── forward domain .test─┘
+```mermaid
+graph TD
+    User[User / Client] -->|HTTP :3000| Frontend[React Frontend]
+    Frontend -->|API :8080| Backend[Go Backend]
+    Backend -->|SQL| DB[(PostgreSQL)]
+    
+    DNS_Client[DNS Client / Dig] -->|DNS :53| CoreDNS[CoreDNS Custom Build]
+    CoreDNS -->|SQL Inquiry| DB
+    
+    subgraph "Docker Compose Network"
+        Frontend
+        Backend
+        DB
+        CoreDNS
+    end
 ```
 
----
+## 🚀 Key Features
+-   **Real-time DNS**: Updates to records (A, CNAME, etc.) are instantly available via CoreDNS `pdsql` plugin.
+-   **User Management**: Multi-user support with authentication (JWT).
+-   **Dashboard**: Manage domains and records in a responsive React UI.
+-   **API First**: Everything is driven by a Go REST API.
 
-## 🖥️ Komponen dan IP
+## 👥 Roles & Permissions
+The system supports two distinct roles:
+1.  **Admin** (`role: admin`)
+    -   Full access to the system.
+    -   Can manage **all** domains and DNS records.
+    -   Can view and manage users.
+    > **Default Admin Credentials**:
+    > -   **Username**: `admin`
+    > -   **Password**: `admin123`
 
-| Komponen         | IP              | Fungsi                              |
-|------------------|-----------------|-------------------------------------|
-| Pi-hole          | 192.168.2.3     | DNS utama seluruh klien             |
-| CoreDNS          | 192.168.2.5     | Resolver domain `.test`, rDNS lokal |
-| dnscrypt-proxy   | 127.0.0.1:54    | Resolver DNS publik terenkripsi     |
+2.  **User** (`role: user`)
+    -   Can only create and manage **their own** domains.
+    -   Cannot see or modify other users' domains.
 
----
+## 📚 API Reference (Swagger Support)
+The following endpoints are currently supported:
 
-## 📁 Struktur Proyek
+### Authentication
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/register` | Register a new user | No |
+| `POST` | `/api/login` | Login and retrieve JWT | No |
 
+### Domains
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/domains` | List all domains (User sees own, Admin sees all) | Yes (JWT) |
+| `POST` | `/api/domains` | Register a new domain | Yes (JWT) |
+| `GET` | `/api/domains/:id` | Get domain details and records | Yes (JWT) |
+
+### DNS Records
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/domains/:id/records` | Add a new DNS record (A, CNAME, etc.) | Yes (JWT) |
+
+-   **Frontend**: React, Vite, TailwindCSS
+-   **Backend**: Go (Golang), Gin, GORM
+-   **Database**: PostgreSQL 15
+-   **DNS**: CoreDNS (built with `pdsql` plugin)
+
+## 🏁 Getting Started
+
+### Prerequisites
+-   Docker & Docker Compose
+
+### Installation
+1.  Clone the repository.
+2.  Start the stack:
+    ```bash
+    docker-compose up --build -d
+    ```
+3.  Access the dashboard at [http://localhost:3000](http://localhost:3000).
+
+### Usage
+1.  **Register a User**: Create a new account on the login page.
+2.  **Register a Domain**: Enter a domain name (e.g., `myserver.lan`) and click Register.
+3.  **Add Records**: Click "Manage DNS" and add A records (e.g., pointing to `192.168.x.x`).
+4.  **Test**:
+    ```bash
+    dig @localhost -p 53 myserver.lan
+    ```
+
+## 📂 Project Structure
 ```
 .
-├── docker-compose.yml
-├── Corefile
-└── zones/
-    ├── domain.test.zone
-    ├── contoh.test.zone
-    ├── reverse.192.168.X.zone
-    └── reverse.10.0.0.zone
+├── backend/            # Go API Source
+├── frontend/           # React UI Source
+├── zones/              # (Legacy) Static zone files
+├── docker-compose.yml  # Orchestration
+├── Dockerfile.coredns  # Custom CoreDNS build
+├── Corefile            # CoreDNS config
+├── init.sql            # DB Schema
+└── README.md           # This file
 ```
-
----
-
-## ⚙️ Langkah Konfigurasi
-
-### 1. Jalankan CoreDNS
-```bash
-docker-compose up -d
-```
-
-### 2. Konfigurasi Forward `.test` di Pi-hole
-Tambahkan ke `/etc/dnsmasq.d/99-local.conf`:
-```ini
-server=/test/192.168.2.5
-server=/domain.test/192.168.2.5
-server=/contoh.test/192.168.2.5
-```
-Lalu restart:
-```bash
-pihole restartdns
-```
-
-> ❗ Tidak perlu mengubah konfigurasi DNS pada perangkat klien. Cukup arahkan semuanya ke Pi-hole.
-
----
-
-## 🧪 Pengujian
-
-### Tes domain lokal dari klien:
-```bash
-dig @192.168.2.3 api.domain.test
-```
-
-### Tes PTR/rDNS lokal:
-```bash
-dig -x 192.168.2.20 @192.168.2.3
-```
-
-### Tes DNS publik:
-```bash
-dig google.com @192.168.2.3
-```
-
----
-
-## 📌 Catatan Penting
-- Pi-hole tetap menjadi entry point DNS utama
-- CoreDNS hanya aktif untuk domain lokal (zone file)
-- dnscrypt tetap bekerja sebagai resolver utama untuk domain global melalui `127.0.0.1:54`
-- Tidak ada konfigurasi DNS yang diubah di klien
-
----
-
-## 🧰 Lisensi
-MIT License
