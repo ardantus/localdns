@@ -12,7 +12,17 @@ import (
 	"gorm.io/gorm"
 )
 
-var SecretKey = []byte(os.Getenv("JWT_SECRET"))
+// GetSecretKey returns the JWT secret key, reading from env at runtime
+func GetSecretKey() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "default-dev-secret-change-in-production"
+	}
+	return []byte(secret)
+}
+
+// For backwards compatibility with middleware
+var SecretKey = GetSecretKey()
 
 func Register(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {

@@ -1,12 +1,7 @@
 . {
     log
     errors
-    pdsql {
-        # pdsql [DSN] [TABLE_PREFIX]
-        # We use environment variables or hardcoded string if env not supported by plugin config directly (CoreDNS supports env in Corefile usually via {$VAR})
-        dsn postgres://user:password@postgres:5432/localdns?sslmode=disable
-        # We might need to map tables if defaults differ, but standard pdsql expects 'records' table usually. 
-        # If it needs specific query, we can configure it. For simplicity, we assume standard schema.
-    }
+    # pdsql <dialect> <dsn>
+    pdsql postgres postgres://user:password@postgres:5432/localdns?sslmode=disable
     cache 30
 }

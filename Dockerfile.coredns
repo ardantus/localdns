@@ -1,4 +1,4 @@
-FROM golang:1.22 AS builder
+FROM golang:latest AS builder
 
 WORKDIR /go/src/github.com/coredns/coredns
 
@@ -13,6 +13,10 @@ RUN echo "pdsql:github.com/wenerme/coredns-pdsql" >> plugin.cfg
 
 # Generate code
 RUN go generate
+
+# Get the plugin dependency (must be after generate creates the import)
+RUN go get github.com/wenerme/coredns-pdsql
+RUN go mod tidy
 
 # Build
 RUN go build -o coredns

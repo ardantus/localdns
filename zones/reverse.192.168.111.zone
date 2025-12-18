@@ -1,5 +1,0 @@
-$TTL 3600
-@ IN SOA ns.ardan.test. admin.ardan.test. (
-    2025061201 3600 1800 604800 86400)
-   IN NS ns.ardan.test.
-111 IN PTR 192-168-111-111.ardan.test.

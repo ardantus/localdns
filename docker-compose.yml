@@ -23,18 +23,44 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: localdns
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     restart: always
 
   backend:
-    image: golang:1.22-alpine
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: localdns_backend
-    working_dir: /app
-    volumes:
-      - ./backend:/app
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=localdns
+      - DB_PORT=5432
+      - JWT_SECRET=your-secret-key-change-in-production
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: localdns_frontend
+    ports:
+      - "3000:3000"
+    restart: always
+
+  whois:
+    build:
+      context: ./whois-server
+      dockerfile: Dockerfile
+    container_name: localdns_whois
     environment:
       - DB_HOST=postgres
       - DB_USER=user
@@ -42,17 +68,12 @@ services:
       - DB_NAME=localdns
       - DB_PORT=5432
     ports:
-      - "8080:8080"
-    command: sh -c "go mod tidy && go run main.go"
+      - "43:43"
     depends_on:
       - postgres
+    restart: always
 
-  frontend:
-    image: node:20-alpine
-    container_name: localdns_frontend
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    ports:
-      - "3000:3000" # Vite default
-    command: sh -c "npm run dev -- --host"
+volumes:
+  postgres_data:
+    driver: local
+

@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true, // Needed for Docker
+    port: 3000,
     proxy: {
       '/api': {
         target: 'http://backend:8080', // Docker service name
